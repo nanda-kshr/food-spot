@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     await adminAuth.setCustomUserClaims(userRecord.uid, { role });
 
     // Step 3: Store extra fields in Firestore
+    
     await adminDB.collection('partners').doc(userRecord.uid).set({
       phone,
       shop_name,
@@ -58,7 +59,7 @@ export async function DELETE(req: NextRequest) {
     await partnerRef.delete();
 
     // Delete role from roles collection
-    const roleRef = adminDB.collection('roles').doc(uid);
+    const roleRef = adminDB.collection('partners').doc(uid);
     await roleRef.delete();
 
     return NextResponse.json({ message: 'Partner deleted successfully' }, { status: 200 });

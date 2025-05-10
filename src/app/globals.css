@@ -3,7 +3,25 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --primary: #F97316;
+  --primary-foreground: #ffffff;
+  --secondary: #E5E7EB;
+  --secondary-foreground: #171717;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #FFF7ED;
+  --accent-foreground: #171717;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #F97316;
+  --gradient-start: #FFF7ED;
+  --gradient-end: #FED7AA;
+  --overlay-gradient-start: rgba(249, 115, 22, 0.1);
+  --overlay-gradient-end: rgba(254, 215, 170, 0.1);
 }
+
 
 @theme inline {
   --color-background: var(--background);
@@ -12,18 +30,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 @font-face {
   font-family: 'Playfair Display';
   src: url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap');
 }
 
 body {
-  @apply bg-[#FFF7ED] text-[#1F2937];
+  @apply bg-[var(--background)] text-[var(--foreground)];
+}
+
+/* Gradient utility classes */
+.gradient-overlay {
+  background: linear-gradient(to bottom right, var(--overlay-gradient-start), var(--overlay-gradient-end));
+}
+
+.gradient-bg {
+  background: linear-gradient(to bottom right, var(--gradient-start), var(--gradient-end));
 }

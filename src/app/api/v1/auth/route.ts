@@ -19,11 +19,12 @@ export async function GET(req: NextRequest) {
     }
 
     // Check roles collection for user's role
-    const roleRef = adminDB.collection('roles').doc(uid);
+    const roleRef = adminDB.collection('partners').doc(uid);
     const roleDoc = await roleRef.get();
 
-    if (roleDoc.exists()) {
-      const { role } = roleDoc.data();
+    if (roleDoc.exists) {
+      const data = roleDoc.data();
+      const role = data?.role as string;
       if (role === 'admin') {
         return NextResponse.json({ role: 'admin' }, { status: 200 });
       } else if (role === 'partner') {
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
     // Default to customer if no role or role is not admin/partner
     return NextResponse.json({ role: 'customer' }, { status: 200 });
   } catch (error) {
+    console.error('Error verifying role:', error);
     return NextResponse.json({ error: 'Failed to verify role' }, { status: 500 });
   }
 }

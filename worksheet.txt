@@ -1,16 +1,74 @@
+#item
+
 {
-    "name": "Margherita Pizza",
-    "price": 129,
-    "description": "Classic pizza with fresh tomatoes, mozzarella, basil, and olive oil on a thin crust",
-    "category": "Pizza",
-    "image": "https://example.com/images/margherita.jpg",
-    "must_try": true
-},{
     "name": "Pepperoni Pizza",
     "price": 399,
     "description": "Savory pizza topped with spicy pepperoni slices, melted cheese, and tomato sauce",
     "category": "Pizza",
-    "image": "https://example.com/images/margherita.jpg",
+    "image": "/items/pizza.png",
+    "must_try": true
+}
+
+{
+    "name": "Chicken Caesar Salad",
+    "price": 299,
+    "description": "Fresh romaine lettuce, grilled chicken, parmesan cheese, and creamy Caesar dressing",
+    "category": "Salad",
+    "image": "/items/caesar.png",
+    "must_try": false
+}
+
+{
+    "name": "Iced Coffee",
+    "price": 149,
+    "description": "Smooth cold brewed coffee served over ice with your choice of milk",
+    "category": "Drinks",
+    "image": "/items/icedcoffee.png",
+    "must_try": false
+}
+
+{
+    "name": "Fresh Orange Juice",
+    "price": 129,
+    "description": "Freshly squeezed orange juice, served chilled",
+    "category": "Drinks",
+    "image": "/items/orangejuice.png",
+    "must_try": true
+}
+
+{
+    "name": "Strawberry Smoothie",
+    "price": 179,
+    "description": "Creamy blend of fresh strawberries, yogurt, and ice",
+    "category": "Drinks",
+    "image": "/items/smoothie.png",
+    "must_try": false
+}
+
+{
+    "name": "Classic Cheeseburger",
+    "price": 349,
+    "description": "Juicy beef patty with American cheese, lettuce, tomato, and special sauce on a toasted bun",
+    "category": "Burger",
+    "image": "/items/burger.png",
+    "must_try": true
+}
+
+{
+    "name": "Vegetable Stir Fry",
+    "price": 279,
+    "description": "Mixed vegetables sautéed in savory sauce, served with steamed rice",
+    "category": "Main Course",
+    "image": "/items/stirfry.png",
+    "must_try": false
+}
+
+{
+    "name": "Chocolate Brownie Sundae",
+    "price": 199,
+    "description": "Warm chocolate brownie topped with vanilla ice cream, chocolate sauce, and whipped cream",
+    "category": "Dessert",
+    "image": "/items/sundae.png",
     "must_try": true
 }
 
