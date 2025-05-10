@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -33,6 +33,7 @@ const LoginPage = () => {
   };
 
   return (
+    <Suspense fallback={<div>Loading...</div>}>
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white flex">
       {/* Left side decorative panel (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-500 to-amber-400 p-12 relative">
@@ -223,6 +224,7 @@ const LoginPage = () => {
         }
       `}</style>
     </div>
+    </Suspense>
   );
 };
 

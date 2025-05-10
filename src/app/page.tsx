@@ -608,10 +608,10 @@ const HomePage = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Restaurant Experience?</h2>
               <p className="text-xl mb-8">Join hundreds of restaurant owners who have already made the smart switch to QR code menus.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/login" className="px-8 py-4 bg-white text-orange-600 rounded-full font-bold hover:bg-orange-50 transition-all shadow-lg">
+                <Link href="/https://wa.me/918848188679?text=I would like to create a menu for my restaurant" className="px-8 py-4 bg-white text-orange-600 rounded-full font-bold hover:bg-orange-50 transition-all shadow-lg">
                   Get Started Today
                 </Link>
-                <Link href="/contact" className="px-8 py-4 bg-transparent border-2 border-white rounded-full font-bold hover:bg-white/10 transition-all">
+                <Link href="https://wa.me/918848188679?text=I would like to create a menu for my restaurant" className="px-8 py-4 bg-transparent border-2 border-white rounded-full font-bold hover:bg-white/10 transition-all">
                   Contact Sales
                 </Link>
               </div>
@@ -640,7 +640,7 @@ const HomePage = () => {
               {[
                 {
                   question: "How much does the QR menu system cost?",
-                  answer: "Our pricing starts at ₹9,999 per year, which includes unlimited menu updates, QR code generation, and WhatsApp order integration. This is significantly less than what most restaurants spend on paper menus in a single year."
+                  answer: "Our pricing starts at ₹299 per month, which includes unlimited menu updates, QR code generation, and WhatsApp order integration. This is significantly less than what most restaurants spend on paper menus in a single year."
                 },
                 {
                   question: "Do I need special equipment to use the QR code system?",
@@ -654,10 +654,6 @@ const HomePage = () => {
                   question: "Can I update my menu whenever I want?",
                   answer: "Yes! You can update your menu as frequently as needed at no additional cost. Add new items, update prices, or mark items as sold out in real-time. Changes appear instantly on your digital menu."
                 },
-                {
-                  question: "What if my customers don't have smartphones?",
-                  answer: "While the majority of diners today have smartphones, we recommend keeping a few laminated paper menus as a backup for those who may not have a device or prefer a traditional menu."
-                }
               ].map((faq, index) => (
                 <motion.div 
                   key={index}
@@ -697,10 +693,10 @@ const HomePage = () => {
             <div>
               <h4 className="text-lg font-bold mb-6">Quick Links</h4>
               <ul className="space-y-3">
-                <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/testimonials" className="text-gray-400 hover:text-white transition-colors">Testimonials</Link></li>
+                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
+                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
+                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Testimonials</Link></li>
               </ul>
             </div>
             <div>
@@ -708,15 +704,15 @@ const HomePage = () => {
               <ul className="space-y-3">
                 <li className="flex items-center">
                   <FiMapPin className="w-4 h-4 mr-2 text-orange-500" />
-                  <span className="text-gray-400">123 Main Street, Bengaluru, India</span>
+                  <span className="text-gray-400">Poonamalle, Chennai, India</span>
                 </li>
                 <li className="flex items-center">
                   <FiPhone className="w-4 h-4 mr-2 text-orange-500" />
-                  <span className="text-gray-400">+91 98765 43210</span>
+                  <span className="text-gray-400">+91 8848188679</span>
                 </li>
                 <li className="flex items-center">
                   <FiMail className="w-4 h-4 mr-2 text-orange-500" />
-                  <span className="text-gray-400">info@foodspot.com</span>
+                  <span className="text-gray-400">nandakishorep2121@gmail.com</span>
                 </li>
               </ul>
             </div>
