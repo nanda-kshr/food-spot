@@ -9,6 +9,7 @@ import { FiSmartphone, FiClock, FiDollarSign, FiPieChart, FiBarChart2, FiUsers, 
 // Current system information
 
 const CURRENT_DATE_TIME = "2025-05-11 01:36:00 IST"; // Using the provided date
+const sendMessage = "https://wa.me/918848188679?text=I would like to create a menu for my restaurant"
 interface Partner {
   id: string;
   shop_name?: string;
@@ -90,7 +91,7 @@ const HomePage = () => {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="flex flex-col sm:flex-row gap-4"
                 >
-                  <Link href="/login" className="px-8 py-4 bg-white text-orange-600 rounded-full font-bold hover:bg-orange-50 transition-all shadow-lg">
+                  <Link href={sendMessage} className="px-8 py-4 bg-white text-orange-600 rounded-full font-bold hover:bg-orange-50 transition-all shadow-lg">
                     Get Started
                   </Link>
                   <button 
@@ -108,13 +109,13 @@ const HomePage = () => {
                 >
                   <div className="flex">
                     <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-orange-300">
-                      <Image src="/hero.png" alt="User" width={32} height={32} />
+                      <Image src="/user.png" alt="User" width={32} height={32} />
                     </div>
                     <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-orange-300 -ml-2">
-                      <Image src="/hero.png" alt="User" width={32} height={32} />
+                      <Image src="/user.png" alt="User" width={32} height={32} />
                     </div>
                     <div className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-orange-300 -ml-2">
-                      <Image src="/hero.png" alt="User" width={32} height={32} />
+                      <Image src="/user.png" alt="User" width={32} height={32} />
                     </div>
                   </div>
                   <span>Trusted by 100+ restaurant owners</span>
@@ -138,7 +139,7 @@ const HomePage = () => {
                   </div>
                   <div className="absolute -bottom-6 -right-6 z-20 bg-white p-4 rounded-xl shadow-xl">
                     <Image
-                      src="/hero.png" 
+                      src="/heroqr.png" 
                       alt="QR Code Sample"
                       width={100}
                       height={100}
@@ -395,8 +396,8 @@ const HomePage = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">With Our QR Menu System:</h3>
                   <ul className="space-y-2">
                     <li className="flex justify-between items-center py-2 border-b border-gray-100">
-                      <span className="text-gray-600">Annual subscription:</span>
-                      <span className="font-medium">₹9,999</span>
+                      <span className="text-gray-600">Monthly subscription:</span>
+                      <span className="font-medium">₹300</span>
                     </li>
                     <li className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Menu updates:</span>
@@ -408,7 +409,7 @@ const HomePage = () => {
                     </li>
                     <li className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Total first-year cost:</span>
-                      <span className="font-bold text-green-500">₹10,999-11,999</span>
+                      <span className="font-bold text-green-500">₹1,300-2,300</span>
                     </li>
                   </ul>
                 </div>
@@ -608,10 +609,10 @@ const HomePage = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Restaurant Experience?</h2>
               <p className="text-xl mb-8">Join hundreds of restaurant owners who have already made the smart switch to QR code menus.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/https://wa.me/918848188679?text=I would like to create a menu for my restaurant" className="px-8 py-4 bg-white text-orange-600 rounded-full font-bold hover:bg-orange-50 transition-all shadow-lg">
+                <Link href={sendMessage} className="px-8 py-4 bg-white text-orange-600 rounded-full font-bold hover:bg-orange-50 transition-all shadow-lg">
                   Get Started Today
                 </Link>
-                <Link href="https://wa.me/918848188679?text=I would like to create a menu for my restaurant" className="px-8 py-4 bg-transparent border-2 border-white rounded-full font-bold hover:bg-white/10 transition-all">
+                <Link href={sendMessage} className="px-8 py-4 bg-transparent border-2 border-white rounded-full font-bold hover:bg-white/10 transition-all">
                   Contact Sales
                 </Link>
               </div>
