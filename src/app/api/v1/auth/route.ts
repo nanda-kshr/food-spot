@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/utils/firebase-admin';
+import { adminDB, adminAuth } from '@/utils/firebaseAdmin';
 
 // GET: Fetch user role based on UID from auth token
 export async function GET(req: NextRequest) {
   try {
+    // Extract token from Authorization header
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized: Missing or invalid token' }, { status: 401 });
     }
 
@@ -13,19 +14,26 @@ export async function GET(req: NextRequest) {
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
-    const roleDoc = await adminDb.collection('roles').doc(uid).get();
+    if (!uid) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
 
-    if (roleDoc.exists) {
-      const { role } = roleDoc.data()!;
-      if (role === 'admin' || role === 'partner') {
-        return NextResponse.json({ role }, { status: 200 });
+    // Check roles collection for user's role
+    const roleRef = adminDB.collection('roles').doc(uid);
+    const roleDoc = await roleRef.get();
+
+    if (roleDoc.exists()) {
+      const { role } = roleDoc.data();
+      if (role === 'admin') {
+        return NextResponse.json({ role: 'admin' }, { status: 200 });
+      } else if (role === 'partner') {
+        return NextResponse.json({ role: 'partner' }, { status: 200 });
       }
     }
 
+    // Default to customer if no role or role is not admin/partner
     return NextResponse.json({ role: 'customer' }, { status: 200 });
-
   } catch (error) {
-    console.error('Error verifying role:', error);
     return NextResponse.json({ error: 'Failed to verify role' }, { status: 500 });
   }
 }

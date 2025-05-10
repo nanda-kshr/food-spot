@@ -1,0 +1,27 @@
+{
+    "name": "Margherita Pizza",
+    "price": 129,
+    "description": "Classic pizza with fresh tomatoes, mozzarella, basil, and olive oil on a thin crust",
+    "category": "Pizza",
+    "image": "https://example.com/images/margherita.jpg",
+    "must_try": true
+},{
+    "name": "Pepperoni Pizza",
+    "price": 399,
+    "description": "Savory pizza topped with spicy pepperoni slices, melted cheese, and tomato sauce",
+    "category": "Pizza",
+    "image": "https://example.com/images/margherita.jpg",
+    "must_try": true
+}
+
+
+#partner
+
+{
+    "email": "restaurant@example.com",
+    "password": "securePassword123",
+    "role": "owner",
+    "phone": "+1-555-123-4567",
+    "shop_name": "Delicious Bites",
+    "location": "123 Main Street, Cityville, ST 12345"
+}

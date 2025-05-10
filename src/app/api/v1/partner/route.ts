@@ -1,36 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/utils/firebase-admin';
+import { adminDB, adminAuth } from '@/utils/firebaseAdmin';
 
 // GET: Fetch all partners
 export async function GET() {
   try {
-    const snapshot = await adminDb.collection('partners').get();
+    const partnersCollection = adminDB.collection('partners');
+    const snapshot = await partnersCollection.get();
     const partners = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     return NextResponse.json({ partners }, { status: 200 });
   } catch (error) {
-    console.error('Error fetching partners:', error);
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch partners' }, { status: 500 });
   }
 }
 
 // POST: Create a new partner and assign role
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { name, email, uid } = await req.json();
+    const body = await req.json();
+    const { email, password, phone, shop_name, location } = body;
+    const role = 'partner';
+    // Step 1: Create Auth User
+    const userRecord = await adminAuth.createUser({ email, password });
 
-    if (!name || !email || !uid) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    // Step 2: Set Custom Claims (role)
+    await adminAuth.setCustomUserClaims(userRecord.uid, { role });
 
-    // Add partner to partners collection
-    const partnerRef = await adminDb.collection('partners').add({ name, email, uid });
+    // Step 3: Store extra fields in Firestore
+    await adminDB.collection('partners').doc(userRecord.uid).set({
+      phone,
+      shop_name,
+      location,
+      email,
+      role,
+      createdAt: new Date(),
+    });
 
-    // Assign partner role in roles collection
-    await adminDb.collection('roles').doc(uid).set({ role: 'partner' }, { merge: true });
-
-    return NextResponse.json({ id: partnerRef.id, name, email, uid }, { status: 201 });
+    return NextResponse.json({ uid: userRecord.uid, message: 'Partner created successfully' });
   } catch (error) {
-    console.error('Error creating partner:', error);
+    console.error(error);
     return NextResponse.json({ error: 'Failed to create partner' }, { status: 500 });
   }
 }
@@ -38,21 +46,24 @@ export async function POST(req: NextRequest) {
 // DELETE: Delete a partner and their role
 export async function DELETE(req: NextRequest) {
   try {
-    const { id, uid } = await req.json();
+    const { uid } = await req.json();
 
-    if (!id || !uid) {
+    if (!uid) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    const id = uid;
 
-    // Delete partner document
-    await adminDb.collection('partners').doc(id).delete();
+    // Delete partner from partners collection
+    const partnerRef = adminDB.collection('partners').doc(id);
+    await partnerRef.delete();
 
-    // Delete role document
-    await adminDb.collection('roles').doc(uid).delete();
+    // Delete role from roles collection
+    const roleRef = adminDB.collection('roles').doc(uid);
+    await roleRef.delete();
 
     return NextResponse.json({ message: 'Partner deleted successfully' }, { status: 200 });
   } catch (error) {
-    console.error('Error deleting partner:', error);
+    console.error(error);
     return NextResponse.json({ error: 'Failed to delete partner' }, { status: 500 });
   }
 }
