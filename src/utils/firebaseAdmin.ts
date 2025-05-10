@@ -6,8 +6,10 @@ if (!admin.apps.length) {
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
+    storageBucket: process.env.NEXT_PRIVATE_FIREBASE_STORAGE_BUCKET,
   });
 }
 
 export const adminAuth = admin.auth();
 export const adminDB = admin.firestore();
+export const adminStorage = admin.storage();

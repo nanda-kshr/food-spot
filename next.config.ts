@@ -28,6 +28,16 @@ const nextConfig: NextConfig = {
         hostname: 'www.kitchentreaty.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'randomuser.me',
+        pathname: '/**',
+      },
     ],
   },
 };

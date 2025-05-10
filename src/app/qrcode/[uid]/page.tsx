@@ -1,12 +1,12 @@
 'use client';
 
-import Image from 'next/image';
+import CachedImage from '@/components/CachedImages';
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { use } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Dialog, Transition } from '@headlessui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiPlus, FiMinus, FiX } from 'react-icons/fi';
+import { FiSearch, FiPlus, FiMinus, FiX, FiLoader, FiUploadCloud } from 'react-icons/fi';
 import { FaStar } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -86,6 +86,14 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
   const toastTracker = useRef<Record<string, number>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
+
 
   // Check if user is a partner or admin
   useEffect(() => {
@@ -251,17 +259,33 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
 
   // Handle quantity change
   const handleQuantityChange = (itemId: string, delta: number) => {
+    // Whether adding or removing, we need to update the quantities first
+    setQuantities((prev) => {
+      const currentQuantity = prev[itemId] || 0;
+      const newQuantity = currentQuantity + delta;
+      
+      // If new quantity would be less than 0, don't change anything
+      if (newQuantity < 0) return prev;
+      
+      // Create the new quantities object
+      const newQuantities = { ...prev };
+      
+      // If the new quantity is 0, remove the item from the object
+      if (newQuantity === 0) {
+        delete newQuantities[itemId];
+      } else {
+        newQuantities[itemId] = newQuantity;
+      }
+      
+      // Update the totals with the new quantities
+      updateTotals(newQuantities);
+      return newQuantities;
+    });
     
-    // For adding items, we need to handle the toast carefully
+    // Only show toast for adding items
     if (delta > 0) {
       const item = items.find(i => i.id === itemId);
-      setQuantities((prev) => {
-        const newQuantity = (prev[itemId] || 0) + delta;
-        if (newQuantity < 0) return prev;
-        const newQuantities = { ...prev, [itemId]: newQuantity };
-        updateTotals(newQuantities);
-        return newQuantities;
-      });
+      
       // Generate a unique key for this action
       const toastKey = `${itemId}_${Date.now()}`;
       
@@ -274,14 +298,21 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
         setTimeout(() => {
           toast.success(`Added ${item.name} to your order`);
           
-          // Clean up the tracker afterf some time to prevent memory leaks
+          // Clean up the tracker after some time to prevent memory leaks
           setTimeout(() => {
             delete toastTracker.current[toastKey];
           }, 2000);
         }, 10);
       }
+    } else if (delta < 0) {
+      // Optionally, you could add a small visual feedback for removing items
+      const item = items.find(i => i.id === itemId);
+      if (item) {
+        // This is a subtle way to show an item was removed without being annoying with too many toasts
+        console.log(`Removed one ${item.name} from order`);
+      }
     }
-  }
+  };
 
   // Automatic scrolling for Must Try section
   useEffect(() => {
@@ -394,12 +425,93 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      handleImageFile(file);
+    }
+  };
+  
+  const handleImageFile = (file: File) => {
+    if (!file.type.match('image.*')) {
+      toast.error('Please select an image file (JPEG, PNG, etc.)');
+      return;
+    }
+  
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageFile(e.dataTransfer.files[0]);
+    }
+  };
+  
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  // Modify your handleSubmit function to upload the image first
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-
+    if (!user) {
+      toast.error("You must be logged in to add items");
+      return;
+    }
+  
     try {
       setIsSubmitting(true);
+      setError(null);
+      
+      // Upload image first if there's an image file
+      let imageUrl = newItem.image;
+      if (imageFile) {
+        setIsUploading(true);
+        
+        // Create a FormData object to send the file
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        
+        const token = await user.getIdToken();
+        const uploadResponse = await fetch('/api/v1/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.message || 'Failed to upload image');
+        }
+        
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.imageUrl; // Get the URL of the uploaded image
+        setIsUploading(false);
+      }
+      
+      // Now create the item with the image URL
       const token = await user.getIdToken();
       const response = await fetch('/api/v1/item', {
         method: 'POST',
@@ -407,24 +519,35 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(newItem)
+        body: JSON.stringify({
+          ...newItem,
+          image: imageUrl,
+          partnerId: uid
+        })
       });
-
+  
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create item');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create item');
       }
-
+  
       // Refresh items list
       const itemsResponse = await fetch(`/api/v1/item?partnerId=${uid}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      if (!itemsResponse.ok) throw new Error('Failed to fetch updated items');
+      
+      if (!itemsResponse.ok) {
+        throw new Error('Failed to fetch updated items');
+      }
+      
       const itemsData = await itemsResponse.json();
       setItems(itemsData.items);
-
+  
+      // Reset and close
+      setImageFile(null);
+      setImagePreviewUrl('');
       handleCloseModal();
       toast.success('Item added successfully!');
     } catch (err: unknown) {
@@ -519,7 +642,7 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
               onClick={openWhatsApp}
               title="Contact on WhatsApp"
             >
-              <Image 
+              <CachedImage 
                 src={`https://ui-avatars.com/api/?name=${shopName}&background=F97316&color=fff&size=256`} 
                 alt={shopName} 
                 fill 
@@ -598,7 +721,7 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
                     onClick={openWhatsApp}
                     title="Contact on WhatsApp"
                   >
-                    <Image
+                    <CachedImage
                       src={item.image || 'https://via.placeholder.com/300x200?text=No+Image'}
                       alt={item.name}
                       fill
@@ -706,7 +829,7 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
                           onClick={openWhatsApp}
                           title="Contact on WhatsApp"
                         >
-                          <Image
+                          <CachedImage
                             src={item.image || 'https://via.placeholder.com/300x300?text=No+Image'}
                             alt={item.name}
                             fill
@@ -857,210 +980,277 @@ const QrCodePage = ({ params }: { params: Promise<{ uid: string }> }) => {
 
       {/* Add Item Modal */}
       <Transition show={showAddModal} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={handleCloseModal}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-          </Transition.Child>
+  <Dialog as="div" className="relative z-50" onClose={handleCloseModal}>
+    <Transition.Child
+      as={Fragment}
+      enter="ease-out duration-300"
+      enterFrom="opacity-0"
+      enterTo="opacity-100"
+      leave="ease-in duration-200"
+      leaveFrom="opacity-100"
+      leaveTo="opacity-0"
+    >
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+    </Transition.Child>
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-xl transform transition-all">
-                  <div className="p-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <Dialog.Title className="text-2xl font-semibold text-gray-800">
-                        {isAddingCategory ? 'Add New Category' : 'Add New Item'}
-                      </Dialog.Title>
-                      <button
-                        onClick={isAddingCategory ? handleCancelCategory : handleCloseModal}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        <FiX className="w-6 h-6" />
-                      </button>
+    <div className="fixed inset-0 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
+        >
+          <Dialog.Panel className="w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-xl transform transition-all">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <Dialog.Title className="text-2xl font-semibold text-gray-800">
+                  {isAddingCategory ? 'Add New Category' : 'Add New Item'}
+                </Dialog.Title>
+                <button
+                  onClick={isAddingCategory ? handleCancelCategory : handleCloseModal}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              </div>
+
+              {isAddingCategory ? (
+                <form onSubmit={handleCategorySubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+                    <input
+                      type="text"
+                      value={newCategory.name}
+                      onChange={handleCategoryInputChange}
+                      required
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
+                      placeholder="Enter category name"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleCancelCategory}
+                      className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingCategory}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmittingCategory ? 'Adding...' : 'Add Category'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={newItem.name}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
+                        placeholder="Item name"
+                      />
                     </div>
 
-                    {isAddingCategory ? (
-                      <form onSubmit={handleCategorySubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
-                          <input
-                            type="text"
-                            value={newCategory.name}
-                            onChange={handleCategoryInputChange}
-                            required
-                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
-                            placeholder="Enter category name"
-                          />
-                        </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹) *</label>
+                      <input
+                        type="number"
+                        name="price"
+                        value={newItem.price}
+                        onChange={handleInputChange}
+                        required
+                        min="0"
+                        step="0.01"
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
 
-                        {error && (
-                          <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg">
-                            {error}
-                          </div>
-                        )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                    <div className="flex gap-2">
+                      <select
+                        name="category"
+                        value={newItem.category}
+                        onChange={handleInputChange}
+                        required
+                        className="flex-1 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
+                      >
+                        <option value="">Select a category</option>
+                        {categories.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={handleAddCategory}
+                        className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center"
+                      >
+                        <FiPlus className="w-5 h-5 mr-1" />
+                        Add New
+                      </button>
+                    </div>
+                  </div>
 
-                        <div className="flex justify-end gap-3 pt-2">
-                          <button
-                            type="button"
-                            onClick={handleCancelCategory}
-                            className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={isSubmittingCategory}
-                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isSubmittingCategory ? 'Adding...' : 'Add Category'}
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                            <input
-                              type="text"
-                              name="name"
-                              value={newItem.name}
-                              onChange={handleInputChange}
-                              required
-                              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
-                              placeholder="Item name"
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      name="description"
+                      value={newItem.description}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
+                      placeholder="Describe your item"
+                    />
+                  </div>
+
+                  {/* Image Upload Section */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Image</label>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden" 
+                    />
+                    
+                    <div 
+                      ref={dropZoneRef}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={triggerFileInput}
+                      className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                        isDragging 
+                          ? 'border-orange-500 bg-orange-50' 
+                          : imageFile 
+                            ? 'border-green-500 bg-green-50' 
+                            : 'border-gray-300 hover:border-orange-500 hover:bg-orange-50'
+                      }`}
+                    >
+                      {imageFile ? (
+                        <div className="space-y-2">
+                          <div className="relative w-full h-48 mx-auto rounded-lg overflow-hidden">
+                            <CachedImage
+                              src={imagePreviewUrl}
+                              alt="Preview"
+                              fill
+                              className="object-cover"
                             />
                           </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹) *</label>
-                            <input
-                              type="number"
-                              name="price"
-                              value={newItem.price}
-                              onChange={handleInputChange}
-                              required
-                              min="0"
-                              step="0.01"
-                              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                          <div className="flex gap-2">
-                            <select
-                              name="category"
-                              value={newItem.category}
-                              onChange={handleInputChange}
-                              required
-                              className="flex-1 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
-                            >
-                              <option value="">Select a category</option>
-                              {categories.map((category) => (
-                                <option key={category} value={category}>
-                                  {category}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              onClick={handleAddCategory}
-                              className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center"
-                            >
-                              <FiPlus className="w-5 h-5 mr-1" />
-                              Add New
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                          <textarea
-                            name="description"
-                            value={newItem.description}
-                            onChange={handleInputChange}
-                            rows={3}
-                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
-                            placeholder="Describe your item"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                          <input
-                            type="url"
-                            name="image"
-                            value={newItem.image}
-                            onChange={handleInputChange}
-                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white text-gray-800"
-                            placeholder="https://example.com/image.jpg"
-                          />
-                        </div>
-
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id="mustTry"
-                            name="mustTry"
-                            checked={newItem.mustTry}
-                            onChange={handleInputChange}
-                            className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor="mustTry" className="ml-2 block text-sm text-gray-700">
-                            Mark as &quot;Must Try&quot;
-                          </label>
-                        </div>
-
-                        {error && (
-                          <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg">
-                            {error}
-                          </div>
-                        )}
-
-                        <div className="flex justify-end gap-3 pt-2">
+                          <p className="text-sm text-gray-600">{imageFile.name}</p>
                           <button
                             type="button"
-                            onClick={handleCloseModal}
-                            className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setImageFile(null);
+                              setImagePreviewUrl('');
+                              setNewItem(prev => ({ ...prev, image: '' }));
+                            }}
+                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition-colors"
                           >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isSubmitting ? 'Adding...' : 'Add Item'}
+                            Change Image
                           </button>
                         </div>
-                      </form>
+                      ) : (
+                        <div className="space-y-2">
+                          <FiUploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="text-gray-700 font-medium">
+                            Drag and drop an image here
+                          </div>
+                          <p className="text-gray-500 text-sm">
+                            or <span className="text-orange-500">click to browse</span>
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            PNG, JPG, GIF up to 10MB
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {isUploading && (
+                      <div className="mt-2 flex items-center justify-center text-sm text-gray-500">
+                        <FiLoader className="animate-spin mr-2 h-4 w-4" />
+                        Uploading image...
+                      </div>
                     )}
                   </div>
-                </Dialog.Panel>
-              </Transition.Child>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="mustTry"
+                      name="mustTry"
+                      checked={newItem.mustTry}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="mustTry" className="ml-2 block text-sm text-gray-700">
+                      Mark as &quot;Must Try&quot;
+                    </label>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || isUploading}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <FiLoader className="animate-spin mr-2 h-4 w-4" />
+                          Adding...
+                        </>
+                      ) : (
+                        'Add Item'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
-          </div>
-        </Dialog>
-      </Transition>
+          </Dialog.Panel>
+        </Transition.Child>
+      </div>
+    </div>
+  </Dialog>
+</Transition>
 
       {/* Order Panel */}
       <Transition show={showOrderPanel} as={Fragment}>
