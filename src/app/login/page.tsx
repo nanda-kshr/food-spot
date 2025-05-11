@@ -1,9 +1,10 @@
 "use client";
 import { Suspense, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiMail, FiLock, FiChevronRight, FiArrowRight, FiX } from 'react-icons/fi';
+import { signIn } from '@/utils/firebaseAuth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -11,10 +12,8 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPasswordPopup, setShowForgotPasswordPopup] = useState(false);
-  const { signIn } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '/';
   const currentDate = '2025-05-10 18:33:37'; // Using the provided date
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +23,11 @@ const LoginPage = () => {
 
     try {
       await signIn(email, password);
-      router.push(redirectTo);
+      if (user && user?.uid) {
+        router.push(`/qrcode/${user.uid}`);
+      } else {
+      setError('Failed to sign in. Please contact the admin.');
+      }
     } catch {
       setError('Failed to sign in. Please check your credentials.');
     } finally {
