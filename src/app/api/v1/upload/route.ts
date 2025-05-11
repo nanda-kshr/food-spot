@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminStorage, adminAuth } from '@/utils/firebaseAdmin';
+import { adminStorage, adminAuth, adminDB } from '@/utils/firebaseAdmin';
 import { v4 as uuidv4 } from 'uuid';
+
+async function verifyPartner(req: NextRequest) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Unauthorized: Missing or invalid token');
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+  const decodedToken = await adminAuth.verifyIdToken(token);
+  const uid = decodedToken.uid;
+
+  const roleRef = adminDB.collection('partners').doc(uid);
+  const roleDoc = await roleRef.get();
+
+  if (!roleDoc.exists || roleDoc.data()?.role !== 'partner') {
+    throw new Error('Unauthorized: User is not a partner');
+  }
+
+  return uid;
+}
 
 // Current system information from the provided values
 const CURRENT_DATE_TIME = "2025-05-10 19:53:07";
@@ -10,6 +30,7 @@ const CURRENT_USER = "nanda-kshr";
 const CACHE_DURATION = 60 * 60 * 24 * 2; // 2 days
 
 export async function POST(request: NextRequest) {
+  await verifyPartner(request);
   try {
     // Verify authentication
     const authHeader = request.headers.get('authorization');
