@@ -58,6 +58,28 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+        
+        .font-decorative {
+          font-family: 'Pacifico', cursive;
+        }
+      `}</style>
+      
+      <div className="max-w-7xl mx-auto px-6 py-4 sm:px-8 lg:px-10 flex justify-center">
+        <Link href="/" className="flex items-center">
+          <Image 
+        src="/circle.png" 
+        alt="FoodSpot" 
+        width={60} 
+        height={60} 
+        className="h-15 w-15"
+          />
+          <span className="ml-5 text-2xl font-decorative tracking-wider text-orange-500">
+        FoodSpot
+          </span>
+        </Link>
+      </div>
       {/* Hero Section */}
       <header className="relative bg-gradient-to-r from-orange-500 to-amber-600 text-white overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-20">

@@ -27,7 +27,6 @@ export async function POST(req: Request) {
     await adminAuth.setCustomUserClaims(userRecord.uid, { role });
 
     // Step 3: Store extra fields in Firestore
-    
     await adminDB.collection('partners').doc(userRecord.uid).set({
       phone,
       shop_name,

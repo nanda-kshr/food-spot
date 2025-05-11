@@ -7,6 +7,10 @@ import { ReactNode, Suspense } from 'react';
 export const metadata = {
   title: 'FoodSpot',
   description: 'Experience the finest dining',
+  icons: {
+    icon: '/circle.png',
+    apple: '/circle.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -36,14 +36,24 @@ const LoginPage = () => {
     <Suspense fallback={<div>Loading...</div>}>
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white flex">
       {/* Left side decorative panel (hidden on mobile) */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+        
+        .font-decorative {
+          font-family: 'Pacifico', cursive;
+        }
+      `}</style>
+      
+      
+
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-500 to-amber-400 p-12 relative">
         <div className="flex flex-col justify-between h-full relative z-10">
           <div>
             <div className="flex items-center mb-8">
-              <Image src="/logo.png" alt="Food Spot Logo" width={48} height={48} className="mr-3" />
-              <h1 className="text-3xl font-bold text-white">Food Spot</h1>
+              <Image src="/circle.png" alt="Food Spot Logo" width={48} height={48} className="mr-3" />
+              <h1 className="text-3xl font-decorative text-white">Food Spot</h1>
             </div>
-            <h2 className="text-4xl font-bold text-white mb-6">Discover the best food near you</h2>
+            <h2 className="text-4xl font-bold  text-white mb-6">Discover the best food near you</h2>
             <p className="text-white text-lg opacity-90">
               Login to access your favorite restaurants, special deals, and personalized recommendations.
             </p>
@@ -93,8 +103,8 @@ const LoginPage = () => {
         <div className="w-full max-w-md">
           {/* Logo for mobile */}
           <div className="lg:hidden flex items-center justify-center mb-8">
-            <Image src="/logo.png" alt="Food Spot Logo" width={40} height={40} className="mr-2" />
-            <h1 className="text-2xl font-bold text-orange-500">Food Spot</h1>
+            <Image src="/circle.png" alt="Food Spot Logo" width={40} height={40} className="mr-2" />
+            <h1 className="text-2xl font-decorative text-orange-500">Food Spot</h1>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8">
