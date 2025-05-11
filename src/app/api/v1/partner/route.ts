@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDB, adminAuth } from '@/utils/firebaseAdmin';
 
+async function verifyPartner(req: NextRequest) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new Error('Unauthorized: Missing or invalid token');
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+  const decodedToken = await adminAuth.verifyIdToken(token);
+  const uid = decodedToken.uid;
+
+  const roleRef = adminDB.collection('partners').doc(uid);
+  const roleDoc = await roleRef.get();
+
+  if (!roleDoc.exists || roleDoc.data()?.role !== 'admin') {
+    throw new Error('Unauthorized: User is not a partner');
+  }
+
+  return uid;
+}
+
+
 // GET: Fetch all partners
 export async function GET() {
   try {
@@ -15,8 +36,9 @@ export async function GET() {
 }
 
 // POST: Create a new partner and assign role
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    await verifyPartner(req);
     const body = await req.json();
     const { email, password, phone, shop_name, location } = body;
     const role = 'partner';
@@ -45,6 +67,7 @@ export async function POST(req: Request) {
 
 // DELETE: Delete a partner and their role
 export async function DELETE(req: NextRequest) {
+  await verifyPartner(req);
   try {
     const { uid } = await req.json();
 

@@ -583,14 +583,12 @@ const AdminPage = () => {
                             <select
                               id="role"
                               name="role"
-                              value={newPartner.role}
+                              value="partner"
                               onChange={handleInputChange}
                               required
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                             >
                               <option value="partner">Partner</option>
-                              <option value="owner">Owner</option>
-                              <option value="manager">Manager</option>
                             </select>
                           </div>
                         </div>
