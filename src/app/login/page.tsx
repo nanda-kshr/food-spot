@@ -1,10 +1,11 @@
 "use client";
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiMail, FiLock, FiChevronRight, FiArrowRight, FiX } from 'react-icons/fi';
-import { signIn } from '@/utils/firebaseAuth';
+import { signIn, signOut } from '@/utils/firebaseAuth';
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +16,25 @@ const LoginPage = () => {
   const { user } = useAuth();
   const router = useRouter();
   const currentDate = '2025-05-10 18:33:37'; // Using the provided date
+  // Check if user is already logged in, redirect to QR code page
+  // or sign them out if they're navigating back to login
+  const handleAlreadyLoggedIn = () => {
+    if (user && user.uid) {
+      signOut()
+        .then(() => {
+          console.log("User signed out when returning to login page");
+        })
+        .catch((error) => {
+          console.error("Sign-out error:", error);
+          setError("Error signing out previous session");
+        });
+    }
+  };
+
+  // Check login status on component mount
+  useEffect(() => {
+    handleAlreadyLoggedIn();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
