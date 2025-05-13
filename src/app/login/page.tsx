@@ -15,30 +15,23 @@ const LoginPage = () => {
   const [showForgotPasswordPopup, setShowForgotPasswordPopup] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
-  const [login, setLogin] = useState(true);
   const currentDate = '2025-05-10 18:33:37'; // Using the provided date
-  // Check if user is already logged in, redirect to QR code page
-  // or sign them out if they're navigating back to login
-  const handleAlreadyLoggedIn = () => {
-    if (user && user.uid) {
-      signOut()
-        .then(() => {
-          setLogin(false);
-          console.log("User signed out when returning to login page");
-        })
-        .catch((error) => {
-          console.error("Sign-out error:", error);
-          setError("Error signing out previous session");
-        });
-    }
-  };
 
-  // Check login status on component mount
-  useEffect(() => {
-    if (login) {
-    handleAlreadyLoggedIn();
-    }
-  }, [user]);
+
+  // Replace your existing useEffect with this
+useEffect(() => {
+  // This will run once when the component mounts
+  if (user && user.uid) {
+    signOut()
+      .then(() => {
+        console.log("User signed out when visiting login page");
+      })
+      .catch((error) => {
+        console.error("Sign-out error:", error);
+        setError("Error signing out previous session");
+      });
+  }
+}, []); // Empty dependency array means this runs once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
