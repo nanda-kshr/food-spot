@@ -15,7 +15,7 @@ const LoginPage = () => {
   const [showForgotPasswordPopup, setShowForgotPasswordPopup] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
-  const [login, setLogin] = useState(false);
+  const [login, setLogin] = useState(true);
   const currentDate = '2025-05-10 18:33:37'; // Using the provided date
   // Check if user is already logged in, redirect to QR code page
   // or sign them out if they're navigating back to login
@@ -23,11 +23,10 @@ const LoginPage = () => {
     if (user && user.uid) {
       signOut()
         .then(() => {
-          setLogin(true);
+          setLogin(false);
           console.log("User signed out when returning to login page");
         })
         .catch((error) => {
-          setLogin(true);
           console.error("Sign-out error:", error);
           setError("Error signing out previous session");
         });
