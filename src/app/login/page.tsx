@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -18,20 +18,6 @@ const LoginPage = () => {
   const currentDate = '2025-05-10 18:33:37'; // Using the provided date
 
 
-  // Replace your existing useEffect with this
-useEffect(() => {
-  // This will run once when the component mounts
-  if (user && user.uid) {
-    signOut()
-      .then(() => {
-        console.log("User signed out when visiting login page");
-      })
-      .catch((error) => {
-        console.error("Sign-out error:", error);
-        setError("Error signing out previous session");
-      });
-  }
-}, []); // Empty dependency array means this runs once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +25,7 @@ useEffect(() => {
     setIsLoading(true);
 
     try {
+      await signOut();
       await signIn(email, password);
       if (user && user?.uid) {
         router.push(`/qrcode/${user.uid}`);
